@@ -1,6 +1,5 @@
 class InfoMessage:
     """Информационное сообщение о тренировке."""
-
     def __init__(self,
                  training_type: str,
                  duration: int,
@@ -46,7 +45,7 @@ class Training:
 
     def get_spent_calories(self) -> float:
         """Получить количество затраченных калорий."""
-        pass
+        raise NotImplementedError('Тип тренировки не совпадает')
 
     def show_training_info(self) -> InfoMessage:
         """Вернуть информационное сообщение о выполненной тренировке."""
@@ -63,17 +62,23 @@ class Running(Training):
     CALORIES_MEAN_SPEED_SHIFT: float = 1.79
 
     def get_spent_calories(self) -> float:
-        return ((self.CALORIES_MEAN_SPEED_MULTIPLIER * self.get_mean_speed()
-                + self.CALORIES_MEAN_SPEED_SHIFT) * self.weight / self.M_IN_KM
-                * (self.duration * self.MIN_IN_H))
+        return (
+            (
+                self.CALORIES_MEAN_SPEED_MULTIPLIER * self.get_mean_speed()
+                + self.CALORIES_MEAN_SPEED_SHIFT
+            )
+            * self.weight
+            / self.M_IN_KM
+            * (self.duration * self.MIN_IN_H)
+        )
 
 
 class SportsWalking(Training):
     """Тренировка: спортивная ходьба."""
-    CWLK_CALORIES_1: float = 0.035
-    CWLK_CALORIES_2: float = 0.029
-    MSEC: float = 0.278
-    M: int = 100
+    COEF_CALORIES_FOR_WALKING_1: float = 0.035
+    COEF_CALORIES_FOR_WALKING_2: float = 0.029
+    KMH_IN_MSEC: float = 1000 / 3000
+    M_IN_SEN: int = 100
 
     def __init__(self,
                  action: int,
@@ -85,18 +90,26 @@ class SportsWalking(Training):
         self.height = height
 
     def get_spent_calories(self) -> float:
-        return ((self.CWLK_CALORIES_1 * self.weight
-                 + ((self.get_mean_speed() * self.MSEC)
-                    ** 2 / (self.height / self.M))
-                 * self.CWLK_CALORIES_2 * self.weight)
-                * (self.duration * self.MIN_IN_H))
+        return (
+            (
+                self.COEF_CALORIES_FOR_WALKING_1 * self.weight
+                + (
+                    (
+                        self.get_mean_speed() * self.M_IN_SEN
+                    )
+                    ** 2 / (self.height / self.M)
+                )
+                * self.COEF_CALORIES_FOR_WALKING_2 * self.weight
+            )
+            * (self.duration * self.MIN_IN_H)
+        )
 
 
 class Swimming(Training):
     """Тренировка: плавание."""
     LEN_STEP: float = 1.38
-    CSWM_CALORIES_1: float = 1.1
-    CSWM_CALORIES_2: float = 2
+    COEF_CALORIES_FROM_SWIMMING_1: float = 1.1
+    COEF_CALORIES_FROM_SWIMMING_2: float = 2
 
     def __init__(self,
                  action: int,
@@ -110,19 +123,34 @@ class Swimming(Training):
         self.count_pool = count_pool
 
     def get_mean_speed(self) -> float:
-        return (self.length_pool * self.count_pool
-                / self.M_IN_KM / self.duration)
+        return (
+            self.length_pool
+            * self.count_pool
+            / self.M_IN_KM
+            / self.duration
+        )
 
     def get_spent_calories(self) -> float:
-        return ((self.get_mean_speed() + self.CSWM_CALORIES_1)
-                * self.CSWM_CALORIES_2 * self.weight * self.duration)
+        return (
+            (
+                self.get_mean_speed() + self.COEF_CALORIES_FROM_SWIMMING_1
+            )
+            * self.COEF_CALORIES_FROM_SWIMMING_2
+            * self.weight
+            * self.duration
+        )
 
 
 def read_package(workout_type: str, data: list) -> Training:
     """Прочитать данные полученные от датчиков."""
-    workout_types = {'SWM': Swimming, 'RUN': Running, 'WLK': SportsWalking}
+    workout_types: dict[str, type[Training]] = {
+        'SWM': Swimming,
+        'RUN': Running,
+        'WLK': SportsWalking
+    }
     if workout_type in workout_types:
         return workout_types[workout_type](*data)
+    raise ValueError
 
 
 def main(training: Training) -> None:
@@ -132,7 +160,7 @@ def main(training: Training) -> None:
 
 
 if __name__ == '__main__':
-    packages = [
+    packages: list[tuple[str, list[int]]] = [
         ('SWM', [720, 1, 80, 25, 40]),
         ('RUN', [15000, 1, 75]),
         ('WLK', [9000, 1, 75, 180]),
