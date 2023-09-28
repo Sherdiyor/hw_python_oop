@@ -77,7 +77,7 @@ class SportsWalking(Training):
     """Тренировка: спортивная ходьба."""
     COEF_CALORIES_FOR_WALKING_1: float = 0.035
     COEF_CALORIES_FOR_WALKING_2: float = 0.029
-    KMH_IN_MSEC: float = 1000 / 3000
+    KMH_IN_MSEC: float = 0.278
     M_IN_SEN: int = 100
 
     def __init__(self,
@@ -95,9 +95,9 @@ class SportsWalking(Training):
                 self.COEF_CALORIES_FOR_WALKING_1 * self.weight
                 + (
                     (
-                        self.get_mean_speed() * self.M_IN_SEN
+                        self.get_mean_speed() * self.KMH_IN_MSEC
                     )
-                    ** 2 / (self.height / self.M)
+                    ** 2 / (self.height / self.M_IN_SEN)
                 )
                 * self.COEF_CALORIES_FOR_WALKING_2 * self.weight
             )
@@ -150,7 +150,7 @@ def read_package(workout_type: str, data: list) -> Training:
     }
     if workout_type in workout_types:
         return workout_types[workout_type](*data)
-    raise ValueError
+    raise ValueError('Тип тренировки не совпадает')
 
 
 def main(training: Training) -> None:
