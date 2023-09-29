@@ -49,7 +49,7 @@ class Training:
 
     def show_training_info(self) -> InfoMessage:
         """Вернуть информационное сообщение о выполненной тренировке."""
-        return InfoMessage(self.__class__.__name__,
+        return InfoMessage(type(self).__name__,
                            self.duration,
                            self.get_distance(),
                            self.get_mean_speed(),
@@ -78,7 +78,7 @@ class SportsWalking(Training):
     COEF_CALORIES_FOR_WALKING_1: float = 0.035
     COEF_CALORIES_FOR_WALKING_2: float = 0.029
     KMH_IN_MSEC: float = 0.278
-    M_IN_SEN: int = 100
+    M_IN_SEC: int = 100
 
     def __init__(self,
                  action: int,
@@ -97,7 +97,7 @@ class SportsWalking(Training):
                     (
                         self.get_mean_speed() * self.KMH_IN_MSEC
                     )
-                    ** 2 / (self.height / self.M_IN_SEN)
+                    ** 2 / (self.height / self.M_IN_SEC)
                 )
                 * self.COEF_CALORIES_FOR_WALKING_2 * self.weight
             )
@@ -141,7 +141,7 @@ class Swimming(Training):
         )
 
 
-def read_package(workout_type: str, data: list) -> Training:
+def read_package(workout_type: str, data: list[int]) -> Training:
     """Прочитать данные полученные от датчиков."""
     workout_types: dict[str, type[Training]] = {
         'SWM': Swimming,
